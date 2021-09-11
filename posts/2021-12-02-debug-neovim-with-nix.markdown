@@ -53,7 +53,10 @@ set substitute-path /build/ ~/neovim
 ```
 
 
+
 References:
 
-- [nixos wiki on neovim](https://nixos.wiki/wiki/Neovim)
-- [nixos doc to maintain your own neovim overlay](https://github.com/NixOS/nixpkgs/pull/126633)
+- [nixos wiki on neovim]
+- [nixos doc to maintain your own neovim overlay]
+
+neovim: www.neovim.io
