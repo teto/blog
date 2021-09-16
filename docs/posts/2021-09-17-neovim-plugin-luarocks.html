@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>My Hakyll Blog - Automatic install of neovim plugin dependencies</title>
+        <link rel="stylesheet" href="../css/default.css" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../">My Hakyll Blog</a>
+            </div>
+            <nav>
+                <a href="../">Home</a>
+                <a href="../about.html">About</a>
+                <a href="../contact.html">Contact</a>
+                <a href="../archive.html">Archive</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>Automatic install of neovim plugin dependencies</h1>
+            <article>
+    <section class="header">
+        Posted on September 17, 2021
+        
+            by Matt
+        
+    </section>
+    <section>
+        <h1 id="improve-package-management-in-neovim">Improve package management in neovim</h1>
+<p>Vim plugins used to be written in Vimscript, which lacked the ecosystem of a more general language. As a consequence, plugins tended to be self-contained and rarely referenced external plugins, thus limiting code reuse and functionalities.</p>
+<p>Neovim 0.5 has dramatically improved lua support and as a consequence, a rich lua plugin ecosystem is born, including new (lua) package managers: <a href="https://github.com/wbthomason/packer.nvim">packer.nvim</a>, <a href="https://github.com/savq/paq-nvim">paq</a>.</p>
+<p>Plugins now rely on external (lua mostly) dependencies and now ask user to explicitly install these dependencies. For instance in <a href="https://github.com/TimUntersberger/neogit">neogit</a>’s readme, the packer installation instructions mention the plenary.nvim dependency:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode lua"><code class="sourceCode lua"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a>use <span class="op">{</span> <span class="st">'TimUntersberger/neogit'</span><span class="op">,</span> requires <span class="op">=</span> <span class="st">'nvim-lua/plenary.nvim'</span> <span class="op">}</span></span></code></pre></div>
+<p>This has several drawbacks: - not scalable: increase the number of plugins and you have users confused, what happens when the plugin updates its dependencies ? Remove some, add new ones, should the user track all these ? - prevents automatic installation of plugins. With sublime or vscode, you can invoke a palette (ctrl+p) find a plugin and install it on the go. I would like to see something similar for neovim.</p>
+<p>Installing and configuring software can be hard but if we limit ourselves to lua dependencies, we could rely on luarocks, a well established lua package manager and its associated package format (rockspec files, format described <a href="https://github.com/luarocks/luarocks/wiki/Rockspec-format">here</a>, example at) to share metadata about lua plugins: name, description, etc. and dependencies !</p>
+<p>Packer has some support for luarocks through the use of <code>use_rocks</code> but looking at the tracker, there are comments about improving this to use plugin rockspecs directly as well as improving the implementation, take for instance <a href="https://github.com/wbthomason/packer.nvim/issues/526">this packer issue</a>.</p>
+<p>I work on adding this support natively to <a href="https://nixos.org/">nixpkgs</a> which shouldn’t be long now. In order to test my implementation, I’ve contributed a few rockspecs to lua plugins I use at https://luarocks.org/labels/neovim.</p>
+<p>This vision relies on the presence of *.rockspec in plugin repositories. So as a plugin maintainer, what can you do ?</p>
+<h1 id="for-lua-plugin-maintainers">For lua plugin maintainers</h1>
+<p>As a maintainer, you’ve already got your hands full so let’s sum up here some information to get you started and not waste time.</p>
+<ol type="1">
+<li>Copy for instance this rockspec https://github.com/nvim-lua/plenary.nvim/blob/master/plenary.nvim-scm-1.rockspec in your repo , update the different fields to match your project and carefully rename the file; luarocks fails if the file prefix doesn’t match the project name</li>
+</ol>
+<p>and that’s it !</p>
+<p>Now if your plugin is a ‘core’ plugin upon which others plugins are likely to build, then you should register your plugin on www.luarocks.org so that other plugins can reference it by its name. You can register your plugin directly via the website or use the CLI with <code>luarocks upload</code>. Note that <code>scm</code> (“source control”, i.e., the development version) versions are not listed in the global manifest.</p>
+<p>As an extra step, you could setup a job on your CI to check that the rockspec keeps working, e.g. <code>luarocks install ./my-project-version.rockspec</code></p>
+    </section>
+</article>
+
+        </main>
+
+        <footer>
+            Site proudly generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>
