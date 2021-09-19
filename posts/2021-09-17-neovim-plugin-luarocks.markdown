@@ -26,6 +26,7 @@ use { 'TimUntersberger/neogit', requires = 'nvim-lua/plenary.nvim' }
 ```
 
 This has several drawbacks:
+
 - not scalable: increase the number of plugins and you have users confused, what
   happens when the plugin updates its dependencies ? Remove some, add new ones,
   should the user track all these ?
@@ -44,7 +45,7 @@ at the tracker, there are comments about improving this to use plugin rockspecs
 directly as well as improving the implementation, take for instance
 [this packer issue](https://github.com/wbthomason/packer.nvim/issues/526).
 
-I work on adding this support natively to [nixpkgs](https://nixos.org/) which
+I work on adding this support natively to [nixpkgs][nixpkgs] which
 shouldn't be long now. In order to test my implementation, I've contributed a
 few rockspecs to lua plugins I use at https://luarocks.org/labels/neovim.
 
@@ -70,3 +71,5 @@ listed in the global manifest.
 
 As an extra step, you could setup a job on your CI to check that the rockspec
 keeps working, e.g. `luarocks install ./my-project-version.rockspec`
+
+[nixpkgs]: https://nixos.org/
