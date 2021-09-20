@@ -2,6 +2,7 @@
 title: Generate a lua overlay in nixpkgs
 tags: nixpkgs, neovim
 author: Matt
+draft: true
 ---
 
 nixpkgs contains a [list of 838 plugins][vim-plugin-names] as of this date.

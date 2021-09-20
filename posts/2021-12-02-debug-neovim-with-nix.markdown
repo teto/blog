@@ -2,6 +2,7 @@
 title: Using neovim on nixos
 tags: nixos, neovim
 author: Matt
+draft: true
 ---
 
 Here are some tips related to developing/debugging a program on nixpkgs, more specifically [neovim].

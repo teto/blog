@@ -1,6 +1,7 @@
 ---
-title: Tu Quoque
+title: Using nix on remarkable2 
 author: Matt
+draft: true
 ---
 
 ```
