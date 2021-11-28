@@ -15,6 +15,12 @@
           texlive.combined.scheme-full
           poppler_utils
         ];
+
+        # TODO upstream
+        # shellHook = ''
+        #   exe=$(cabal list-bin exe:site)
+        #   PATH="$(dirname $exe):$PATH"
+        # '';
       }
     );
 }
