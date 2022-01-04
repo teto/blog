@@ -1,25 +1,17 @@
 ---
-title: Analyze mptcp packet captures with mptcpanalyzer
-tags: mptcp, mptcpanalyzer
+title: Generate mptcp traces (with iperf)
+tags: mptcp, pcap, iperf
 author: Matt
 ---
 
-See [my other post][./2021-12-02-install-mptcp-kernel.markdown] for an introduction of MPTCP.
-Even though it is an extension of TCP, the changes are deep enough that it could
-be considered a new protocol.
-[How to install MPTCP on linux](posts/2021-12-02-install-mptcp-kernel.markdown)
-
-Follow [mptcpanalyzer's README](https://github.com/teto/mptcpanalyzer/tree/main/mptcpanalyzer#installation) instructions
-to install the software.
-
-
+See [this post](./2021-12-02-install-mptcp-kernel.markdown) for an MPTCP
+introduction.
 
 
 Let's generate some MPTCP packets that we can analyze with [mptcpanalyzer](https://github.com/teto/mptcpanalyzer).
 Follow the installation instructions.
 (if you use nix >= 2.4, `nix-env -iA haskellPackages.mptcpanalyzer` could also do the
  trick).
-
 
 
 `iperf -s` starts the iperf server, by default listens on port 5201 (can be
@@ -41,3 +33,4 @@ This can be altered via `--bidir` to have it both ways or `--reverse`.
 [Wireshark](www.wireshark.org) > 3.0 understands the MPTCP protocol and can
 display the relative global sequence number (also called DSN: Data Sequence
 Number).
+

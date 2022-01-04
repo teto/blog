@@ -2,7 +2,6 @@
 title: Working with the MPTCP path manager
 tags: mptcp
 author: Matt
-draft: true
 ---
 
 Multipath TCP (mptcp) is an extension of TCP (Transmission Control Protocol) to
@@ -22,11 +21,11 @@ This capacity is leveraged by the [out-of-tree] linux MPTCP path manager.
 
 
 You can install our plugin which appears in mptcp-pm contrib folder:
-1. Download [mptcp plugin](github.com/teto/quantum2/mptcp-pm/contrib/mptcp.lua).
+1. Download [mptcp plugin](github.com/teto/mptcpanalyzer/contrib/mptcp.lua).
 2. Move it to ~/.config/wireshark/plugins
 
 To test it is properl installed you can:
-1. Download from the same repo an [example pcap](github.com/teto/quantum2/mptcp-pm/contrib/netlink-mptcp.pcapng).
+1. Download from the same repo an [example pcap](github.com/teto/mptcpanalyzer/mptcp-pm/contrib/netlink-mptcp.pcapng).
 2. Load it in wireshark
 3. Then you can filter for `genl.mptcp.cmd`
 

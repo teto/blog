@@ -1,8 +1,7 @@
 ---
 title: Install a Multipath TCP kernel on linux
-tags: mptcp
+tags: mptcp, kernel
 author: Matt
-draft: true
 ---
 
 Multipath TCP (mptcp) is an extension of TCP (Transmission Control Protocol) to
@@ -12,8 +11,15 @@ it harder to spy on your traffic or just for fiability/redundancy.
 Even though it is an extension of TCP, the changes are deep enough that it could
 be considered a new protocol.
 
-Linux later than 5.30 contain MPTCP if it was enabled at runtime.
-You can check this with `sysctl -a |grep mptcp` which can return something
+Nowadays there are two linux implementations that I know of:
+1. the [legacy][out-of-tree] one developed at UCL (Belgium)
+2. recent linux kernel (>= 5.13) also support basic MPTCP and add features with every new release.
+
+Instructions to install 1) are available on their website so let's focus on the
+official kernel.
+
+Linux later than 5.13 contain MPTCP if it was enabled at compilation time.
+You can also control the behavior at runtime: `sysctl -a |grep mptcp` should return something
 similar to:
 ```sh
 net.ipv4.tcp_available_ulp = mptcp
@@ -31,7 +37,6 @@ CONFIG_MPTCP_IPV6=y
 CONFIG_MPTCP_KUNIT_TEST=m
 ```
 
-[Wireshark](www.wireshark.org) > 3.0 understands the MPTCP protocol and can
-display the relative global sequence number (also called DSN: Data Sequence
-Number).
+Recompile your kernel with these options enabled and rebooting should fix it.
 
+[out-of-tree]: http://mutipath-tcp.org

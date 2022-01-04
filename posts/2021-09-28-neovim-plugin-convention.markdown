@@ -2,7 +2,6 @@
 title: Automation opportunities in the neovim plugin ecosystem
 tags: plugins, neovim
 author: Matt
-draft: true
 ---
 
 This post is written with the intention of serving as a concrete starting point
