@@ -53,7 +53,7 @@ plot-tcp --display owd examples/client_2_filtered.pcapng 0 examples/server_2_fil
 ```
 
 which produces:
-[One-Way delays for stream 0](./images/mptcp/tcp-owd-stream-0.png)
+![One-Way delays for stream 0](/images/mptcp/tcp-owd-stream-0.png)
 
 Same can be done for MPTCP with:
 ```
