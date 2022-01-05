@@ -1,7 +1,7 @@
 ---
 title: Install a Multipath TCP kernel on linux
-tags: mptcp, kernel
 author: Matt
+tags: mptcp, kernel
 ---
 
 Multipath TCP (mptcp) is an extension of TCP (Transmission Control Protocol) to

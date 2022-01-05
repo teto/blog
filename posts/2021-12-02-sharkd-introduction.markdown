@@ -34,11 +34,5 @@ Note that in practice there are several pitfalls to avoid:
 processed.
 
 
-[Wireshark](www.wireshark.org) > 3.0 understands the MPTCP protocol and can
-display the relative global sequence number (also called DSN: Data Sequence
-Number).
-sharkd-doc: https://wiki.wireshark.org/Development/sharkd#request-syntax
-https://wiki.wireshark.org/sharkd-Request-Syntax.md
-
-
+[Wireshark]: www.wireshark.org
 

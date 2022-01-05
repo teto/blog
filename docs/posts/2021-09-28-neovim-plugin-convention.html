@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Software ninja - Automation opportunities in the neovim plugin ecosystem</title>
+        <link rel="stylesheet" href="../css/default.css" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../">Ninja hacking</a>
+            </div>
+            <nav>
+                <a href="../">Home</a>
+                <a href="../about.html">About</a>
+                <a href="../contact.html">Contact</a>
+                <a href="../archive.html">Archive</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>Automation opportunities in the neovim plugin ecosystem</h1>
+            <article>
+    <section class="header">
+    Posted on September 28, 2021
+    
+        by Matt
+    
+    </section>
+    <section>
+    
+    Tags: 
+    
+    </section>
+    <section>
+<p>This post is written with the intention of serving as a concrete starting point for a discussion on how plugins can expose their functionalities/settings to either neovim or a third party.</p>
+<p>NB: if you are looking for the exposure of other metadata like package dependencies, let me redirect you to <a href="./2021-09-17-neovim-plugin-luarocks.markdown">previous post</a>,</p>
+<p>Why do you ask ? - to be able to discover/get/set plugin settings across a single interface. - …which in turn could make the creation of a neovim configurator GUIs more tractable: TODO (insert a mockup "what <code>nvim-config</code> could have been) - I would like that</p>
+<p>A similar example in neovim I am proud of is how neovim options are exposed and can be fuzzy-searched via <code>:Telescope vim_options</code> (though I preferred how this <a href="nvim-palette">outdated plugin</a> allowed to fuzzy-search on the options description). Lookup <code>:nvim_get_option_info</code> and src/nvim/options.lua if you are curious).</p>
+<p>Before starting, let’s sum up some design goals as well as the non goals: - THIS WILL NOT BE MANDATORY ! vim/neovim strives on freedom let’s not add what justin calls bureaucracy - similarly it does not need to expose everything from the plugin. It’s hard to add automation when a plugin accepts functions as settings, not exposing them doesn’t mean they don’t exist, it just prolongs the status-quo - such convention follows the chicken &amp; egg issue: no one will build automation tools if no plugins support it so we need enough believers to bootstrap the project. This also implies to keep the initial design simple, while having a clear enough idea of the future extensions not to break the format. We may need a tool to validate the format</p>
+<h1 id="section"></h1>
+<p>I am no plugin author so I may lack the proper perspective, yet I’ve taken on to provide this starting point (nothing official !), to kick off the discussion.</p>
+<p>First off, the format choice, for the reasons listed by justin here, I think lua is the least restricting choice: no external dependencies. etc.</p>
+<p>The plugin ecosystem indicates a striving lua trend (check github trends), and fennel, teal plugins can generate lua. Lua is easy to generate too and in most cases it will be created manually anyway.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode lua"><code class="sourceCode lua"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="op">{</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a>	<span class="co">-- single increasing number to detect an outdated format</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a>	<span class="co">-- if unsupported format</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a>	version <span class="op">=</span> <span class="dv">42</span><span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a>	<span class="co">-- list of available colorschemes, can this be automated from colors ? </span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a>	<span class="co">-- check telescope ?</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a>	colorschemes <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true"></a>		<span class="st">&quot;gruvbox-256&quot;</span><span class="op">,</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true"></a>		<span class="st">&quot;gruvbox-trueguicolors&quot;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true"></a>	<span class="op">},</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true"></a>	<span class="co">-- </span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true"></a>	user_options <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true"></a>		<span class="fu">type</span> <span class="op">=</span> <span class="st">&quot;ro&quot;</span><span class="op">,</span> <span class="co">-- readonly</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true"></a>	ro_ <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true"></a>	<span class="op">},</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true"></a>	<span class="co">-- expose mappings between a provider name and a possible value</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true"></a>	providers <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true"></a>		<span class="op">[</span><span class="st">&quot; &quot;</span><span class="op">]</span> <span class="op">=</span> <span class="st">&quot;&quot;</span><span class="op">,</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true"></a>		<span class="op">[</span><span class="st">&quot;clipboard&quot;</span> <span class="op">=</span> <span class="st">&quot;&quot;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true"></a>	<span class="op">}</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true"></a><span class="op">}</span></span></code></pre></div>
+    </section>
+</article>
+
+        </main>
+
+        <footer>
+            Site generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>
