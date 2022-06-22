@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Software ninja - Automatic install of neovim plugin dependencies (2)</title>
+        <link rel="stylesheet" href="../css/default.css" />
+    </head>
+    <body>
+        <header>
+            <div class="logo">
+                <a href="../">Ninja hacking</a>
+            </div>
+            <nav>
+                <a href="../">Home</a>
+                <a href="../about.html">About</a>
+                <a href="../contact.html">Contact</a>
+                <a href="../archive.html">Archive</a>
+            </nav>
+        </header>
+
+        <main role="main">
+            <h1>Automatic install of neovim plugin dependencies (2)</h1>
+            <article>
+    <section class="header">
+    Posted on June 22, 2022
+    
+        by Matt
+    
+    </section>
+    <section>
+    
+    Tags: <a title="All pages tagged 'plugins'." href="../tags/plugins.html">plugins</a>, <a title="All pages tagged 'neovim'." href="../tags/neovim.html">neovim</a>
+    
+    </section>
+    <section>
+<p>See <a href="./posts/2021-09-17-neovim-plugin-luarocks.markdown">part 1</a> for the long motivational speech. The short version is: let’s leverage rockspec and the luarocks infrastructure to specify/autoinstall neovim plugin dependencies.</p>
+<p><a href="./posts/2021-09-17-neovim-plugin-luarocks.markdown">Part 1</a> presented a vision of this for the package manager <a href="www.nixos.org">nix</a>. The good news is that I finished adding this to “nixpkgs” (=the collection of packages used by the package manager nix).</p>
+<p>I want to detail how I did it with the hope my experience helps other package managers such as packer.nvim.</p>
+<p>The <a href=".#lua-plugin-packaging-in-nixpkgs">first part</a> details the vim/lua <a href="www.nixos.org">nix</a> workflow while the second part presents how packer.nvim could achieve autodiscovery of plugin dependencies and At the end I list a few painpoints that could be improved through community effort. its install. If you don’t know about nix, you should probably just read the <a href="#dependency-discovery-in-packer.nvim">2nd part</a>.</p>
+<h1 id="lua-plugin-packaging-in-nixpkgs">lua plugin packaging in nixpkgs</h1>
+<p>The <a href="https://nixos.org/manual/nixpkgs/stable/#users-guide-to-lua-infrastructure">nixpkgs manual</a> explains how to update the lua package set. To sum it up, <a href="https://github.com/NixOS/nixpkgs/blob/master/maintainers/scripts/update-luarocks-packages">this script</a> looks for packages to update in a <a href="https://github.com/NixOS/nixpkgs/blob/master/maintainers/scripts/luarocks-packages.csv">.csv file</a>. In theory, we could import the list of packages referenced by luarocks but working with a list of manually selected packages allow to deal with issues more sensibly until our scripts get more robust. The script calls <a href="https://github.com/nix-community/luarocks-nix">our fork of luarocks</a> which adds a <code>nix</code> command to luarocks to convert a <a href="https://github.com/luarocks/luarocks/wiki/Rockspec-format">rockspec</a> to a nix derivation:</p>
+<p>For instance:</p>
+<pre><code>$ luarocks nix plenary.nvim
+{ buildLuarocksPackage, luaOlder, luaAtLeast
+, fetchgit, lua, luassert
+}:
+buildLuarocksPackage {
+  pname = &quot;plenary.nvim&quot;;
+  version = &quot;scm-1&quot;;
+  knownRockspec = (fetchurl {
+    url    = &quot;mirror://luarocks/plenary.nvim-scm-1.rockspec&quot;;
+    sha256 = &quot;08kv1s66zhl9amzy9gx3101854ig992kl1gzzr51sx3szr43bx3x&quot;;
+  }).outPath;
+  src = fetchgit ( removeAttrs (builtins.fromJSON ''{
+  &quot;url&quot;: &quot;https://github.com/nvim-lua/plenary.nvim&quot;,
+  &quot;rev&quot;: &quot;968a4b9afec0c633bc369662e78f8c5db0eba249&quot;,
+  &quot;date&quot;: &quot;2022-06-12T21:41:00+02:00&quot;,
+  &quot;path&quot;: &quot;/nix/store/z2mzxda6fr97axyjfb8117l7wlb47wwb-plenary.nvim&quot;,
+  &quot;sha256&quot;: &quot;05x9hnz960ljcb2psqycxgdmh99j36y16vbb9l92wjv5szkz37x5&quot;,
+  &quot;fetchLFS&quot;: false,
+  &quot;fetchSubmodules&quot;: true,
+  &quot;deepClone&quot;: false,
+  &quot;leaveDotGit&quot;: false
+}
+ '') [&quot;date&quot; &quot;path&quot;]) ;
+
+  disabled = with lua; (luaOlder &quot;5.1&quot;) || (luaAtLeast &quot;5.4&quot;);
+  propagatedBuildInputs = [ lua luassert ];
+
+  meta = {
+    homepage = &quot;http://github.com/nvim-lua/plenary.nvim&quot;;
+    description = &quot;lua functions you don't want to write &quot;;
+    license.fullName = &quot;MIT/X11&quot;;
+  };
+}</code></pre>
+<p>The results of running this command per-package are aggregated in <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/lua-modules/generated-packages.nix">generated-packages.nix</a>. As usual with generated nix packages, some packages need more care than others and need some tweaks to work. These tweaks live in <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/lua-modules/overrides.nix">overrides.nix</a> that is stable across the package updates (apart for luv whose buildsystem keep changing).</p>
+<p>There is a similar process for vim: <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/editors/vim/plugins/generated.nix">vim generated file</a> and <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/editors/vim/plugins/overrides.nix">its overrides</a>. The vim packaging workflow is simpler but it requires setting plugin dependencies by hand. Metadata retreival is also limited by github’s api. Because nixos is one of a kind, it can also be reassuring to be able to run the package test suite. For these reasons I’ve been pushing to be able to install vim plugins as luarocks packages. When generating the vim packageset, the vim updater now checks whether a homonym of the package lives in the lua package set. If yes, the updater calls build <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/editors/neovim/build-neovim-plugin.nix">buildNeovimPluginFrom2Nix</a> instead of <a href="https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/editors/vim/plugins/build-vim-plugin.nix">buildVimPluginFrom2Nix</a>, ie., nix does a <strong>flat install</strong> (i.e., luarocks installs in a <code>lua</code> folder instead of the nested share/lua/5.X/… folders).</p>
+<h1 id="dependency-discovery-in-packer.nvim">dependency discovery in packer.nvim ?</h1>
+<p>Packer.nvim, as of this writing, relies on a python library to handle its luarocks interactions. I believe it should require luarocks as an dependency/library instead so that any python dependency can be removed.</p>
+<p>Neovim expects a certain folder hierarchy when going through its plugins. By default luarocks installs rockspecs in “share/lua/VERSION” but neovim expects these files in a <code>lua</code> folder:</p>
+<p>We can tweak luarocks settings to achieve just that: in a file referenced by the environment variable <code>LUAROCKS_CONFIG</code>, set:</p>
+<pre><code>lua_modules_path = &quot;lua&quot;</code></pre>
+<p>A second difficulty is for copying the “autoload”, “plugin” folders of many neovim plugins. The <code>copy_directories</code> component of the <a href="https://github.com/luarocks/luarocks/wiki/Rockspec-format">rockspec</a> was conceived to copy data such as those, luarocks doesn’t allow to configure this path though.</p>
+<p>To work around this limitation we can move the files installed via the <code>copy_directories</code> directive to the root of the installation folder in a postprocessing step <code>cp -rfv "$TARGET_DIR/$rocksSubdir/$pname/$version/." "$TARGET_DIR"</code>.</p>
+<p>And this is it for the packaging aspect !</p>
+<h1 id="future-work">Future work</h1>
+<p>Here I have listed a few points that could be worth improving:</p>
+<ul>
+<li>Specifying the source files can be painful: see <a href="https://github.com/nvim-lua/plenary.nvim/blob/968a4b9afec0c633bc369662e78f8c5db0eba249/plenary.nvim-scm-1.rockspec#L34">plenary rockspec</a> to convince yourself. Turns out everything under the ‘lua’ folder is automatically globbed for the ‘builtin’ module type so in this peculiar case, we could have just written nothing. A luarocks <code>glob</code> function could be useful otherwise.</li>
+<li>A config entry to specify where to install the <code>copy_directories</code> component of the rockspec would remove our postprocessing oneliner.</li>
+<li>it is a more generic problem but the lack of support for <code>pkg-config</code> is annoying on systems like nixos</li>
+<li>we could ask for a “neovim” module type if the rockspec approach really takes off, that</li>
+</ul>
+    </section>
+</article>
+
+        </main>
+
+        <footer>
+            Site generated by
+            <a href="http://jaspervdj.be/hakyll">Hakyll</a>
+        </footer>
+    </body>
+</html>
