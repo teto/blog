@@ -1,7 +1,7 @@
 {
   description = "My Website";
   inputs.nixpkgs.url = "github:nixos/nixpkgs";
-  inputs.hakyll-flakes.url = "github:Radvendii/hakyll-flakes";
+  inputs.hakyll-flakes.url = "github:teto/hakyll-flakes";
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
   outputs = { self, hakyll-flakes, flake-utils, nixpkgs }:
